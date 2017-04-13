@@ -1,21 +1,30 @@
 const jobRouter = require('express').Router();
-
-let allJobs = [
-  {'id': '478485', 'company': 'Iron Yard', 'link': 'http://www.theironyard.com', 'notes': 'Coding school', 'createTime': '4/14/17'},
-  {'id': '467365', 'company': 'General Assembly', 'link': 'http://www.generalassembly.com', 'notes': 'Coding school', 'createTime': '4/15/17'},
-  {'id': '85785', 'company': 'Coding Dojo', 'link': 'http://www.codingdojo.com', 'notes': 'Coding school', 'createTime': '4/13/17'}
-];
+const Job = require('../models/Job.model.js');
 
 jobRouter.get('/', function showAllJobs(request, response, next){
-  let newJobArray = [];
 
-  allJobs.forEach(function getJobInfo(job){
-    newJobArray.push({'id': job.id, 'company':job.company, 'link': job.link});
-  });
-
-  response.json(newJobArray);
-
+  Job.find()
+  /**
+   * Retrieves all jobs in the database
+   * @param   {Array} allJobs An array of jobs in the database
+   * @return  {Void}
+   */
+    .then(function sendBackAllJobs(allJobs) {
+      response.json(allJobs);
+      console.log(allJobs);
+    })
+    .catch(function handleIssues(err) {
+      console.error(err);
+      let ourError = new Error('Unable to retrieve jobs');
+      ourError.status = 500;
+      next(ourError);
+    });
 });
+  // let newJobArray = [];
+  // allJobs.forEach(function getJobInfo(job){
+  //   newJobArray.push({'id': job.id, 'company':job.company, 'link': job.link});
+  // });
+  // response.json(newJobArray);
 
 /**
  * Adds a job to the array of jobs
@@ -25,12 +34,31 @@ jobRouter.get('/', function showAllJobs(request, response, next){
 function addAJob(request, response, next){
   console.log('Incoming!!!!', request.body);
 
-  request.body.createTime = Date.now();
-  request.body.id = '3904723987' + Math.random();
+  if(!request.body) {
+    let err = new Error('You must provide a job');
+    err.status = 400;
+    next(err);
+    return;
+  }
 
-  allJobs.push(request.body);
+  let theJobCreated = new Job({
+    company: request.body.company,
+    link: request.body.link,
+    notes: request.body.notes,
+    createTime: new Date()
+  });
 
-  response.json({message: 'Job added!', theJobIAdded: request.body});
+  theJobCreated.save()
+    .then(function sendBackTheResponse(data) {
+      response.json({ message: 'Added the job!', theJobIAdded: data});
+    })
+    .catch(function handleIssues(err) {
+      console.error(err);
+      let ourError = new Error('Unable to save new Job');
+      ourError.status = 500;
+      next(ourError);
+    });
+
 }
 jobRouter.post('/', addAJob);
 
