@@ -3,28 +3,23 @@ const Job = require('../models/Job.model.js');
 
 jobRouter.get('/', function showAllJobs(request, response, next){
 
-  Job.find()
-  /**
-   * Retrieves all jobs in the database
-   * @param   {Array} allJobs An array of jobs in the database
-   * @return  {Void}
-   */
-    .then(function sendBackAllJobs(allJobs) {
-      response.json(allJobs);
-      console.log(allJobs);
+  let searchTerms = {};
+
+  if (request.query.query){
+    searchTerms.company = {$regex: request.query.query, $options: 'i'};
+  }
+
+  Job.find(searchTerms)
+    .then(function sendBackMatchingJobs(allMatchingInfo) {
+      response.json(allMatchingInfo);
+      console.log(allMatchingInfo);
     })
     .catch(function handleIssues(err) {
-      console.error(err);
-      let ourError = new Error('Unable to retrieve jobs');
-      ourError.status = 500;
-      next(ourError);
+      console.log(err);
+      next(err);
     });
 });
-  // let newJobArray = [];
-  // allJobs.forEach(function getJobInfo(job){
-  //   newJobArray.push({'id': job.id, 'company':job.company, 'link': job.link});
-  // });
-  // response.json(newJobArray);
+
 
 /**
  * Adds a job to the array of jobs
