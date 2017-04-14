@@ -11,7 +11,7 @@ console.log('process id', process.pid);
 
 console.log('Database location', process.env.MY_DB_LOCATION);
 
-app.use(express.static(__dirname + '/../client'));
+app.use(express.static(__dirname + '/../client/public'));
 
 
 app.use(bodyParser.json());
