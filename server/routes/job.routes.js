@@ -28,7 +28,6 @@ jobRouter.get('/', function showAllJobs(request, response, next){
 });
 
 jobRouter.get('/:id', function retrieveSingleJob(request, response, next) {
-
   console.log('Request params', request.params.id);
 
   Job.findById(request.params.id)
@@ -48,6 +47,24 @@ jobRouter.get('/:id', function retrieveSingleJob(request, response, next) {
 
 });
 
+jobRouter.delete('/:id', function deleteJob(request, response, next) {
+  Job.findById(request.params.id)
+    .then(function deleteTheJob(theJobInfo) {
+      if(!theJobInfo) {
+      let err = new Error('Job to delete is not found');
+      err.status = 404;
+      return next(err);
+    }
+      theJobInfo.remove();
+      response.json(theJobInfo);
+    })
+    .catch(function handleIssues(err) {
+      console.error(err);
+      let ourError = new Error('There was an error finding the job');
+      ourError.status = err.status;
+      next(err);
+    });
+});
 
 /**
  * Adds a job to the array of jobs
